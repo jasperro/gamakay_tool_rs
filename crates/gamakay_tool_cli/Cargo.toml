@@ -1,0 +1,11 @@
+[package]
+authors = ["Jasper Albering <jasper.albering@gmail.com>"]
+edition = "2024"
+name = "gamakay_tool_cli"
+description = "A simple Rust project using Nix"
+version = "0.1.0"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive", "env"] }
+anyhow = "1.0.99"
+hidapi = "2.6.5"
