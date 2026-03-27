@@ -1,8 +1,12 @@
+#![feature(generic_const_exprs)]
+
 use anyhow::{Context, Error, Result};
 // use clap::Parser;
 
 extern crate hidapi;
 use hidapi::{DeviceInfo, HidApi, HidDevice, HidError};
+
+use crate::utils::{KEYBOARD_LAYOUT, KeyAction, KeyCode, KeyboardLayoutExt};
 
 const VENDOR_ID: u16 = 0x3151;
 const PRODUCT_ID: u16 = 0x4015;
@@ -68,25 +72,28 @@ impl KeyboardDevice {
             .next();
     }
 
-    pub fn send_key_remap(&self) -> Result<(), HidError> {
-        let keytomodify: u8 = 38;
-        // Any of the 4 values can set the key.
-        // Best practice is probably modifiers first, then other key.
-        let value1: u8 = 0;
-        let value2: u8 = 28;
-        let value3: u8 = 0;
-        let value4: u8 = 0;
+    pub fn send_key_remap(&self) -> Result<(), Error> {
+        let keytomodify: u8 = KEYBOARD_LAYOUT
+            .find_by_key(KeyCode::B)
+            .context("Key does not exist in layout")?
+            .matrix_index;
         let firstpart: [u8; 7] = [0x13, 0x00, keytomodify, 0x00, 0x00, 0x00, 0x00];
         let checksum = calculate_checksum(&firstpart[..]);
-        let secondpart: [u8; 57] = [
-            checksum, value1, value2, value3, value4, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00,
-        ];
-        let data = [&[0x00 as u8][..], &firstpart[..], &secondpart[..]].concat();
-        self.control_device.send_feature_report(&data[..])
+        let padding: [u8; 52] = [0x00; 52];
+        // let values = [0u8, KeyCode::G as u8, KeyCode::Fn as u8, 0u8];
+        let values = KeyCode::B;
+        let values = values.to_bytes();
+        let data = [
+            &[0x00 as u8][..],
+            &firstpart[..],
+            &[checksum][..],
+            &values[..],
+            &padding[..],
+        ]
+        .concat();
+        self.control_device
+            .send_feature_report(&data[..])
+            .context("HID Error")
     }
 }
 
