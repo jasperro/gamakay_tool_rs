@@ -1,15 +1,19 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use std::{any::Any, fmt::Debug};
+
+use strum::EnumIter;
+
+#[derive(EnumIter, Debug, Clone, Copy, PartialEq)]
 #[repr(u8)]
 pub enum KeyCode {
     None = 0,
-    Fn = 1,
+    Mouse = 1, // When using parameters, can have mouse effects
     A = 4,
     B = 5,
     C = 6,
     D = 7,
     E = 8,
     F = 9,
-    G = 10,
+    G = 10, // Or Fn when used with parameter 1
     H = 11,
     I = 12,
     J = 13,
@@ -68,23 +72,23 @@ pub enum KeyCode {
     F10 = 67,
     F11 = 68,
     F12 = 69,
-    PrintScreen = 70,
-    ScrollLock = 71,
+    Print = 70,
+    ScrLk = 71,
     Pause = 72,
     Home = 74,
-    PageUp = 75,
-    Delete = 76,
+    PgUp = 75,
+    Del = 76,
     End = 77,
-    PageDown = 78,
+    PgDown = 78,
     Right = 79,
     Left = 80,
     Down = 81,
     Up = 82,
-    NumLock = 83,
-    NumSlash = 84,
-    NumStar = 85,
-    NumMinus = 86,
-    NumPlus = 87,
+    NumLk = 83,
+    NumDiv = 84,
+    NumMul = 85,
+    NumMin = 86,
+    NumAdd = 87,
     NumEnter = 88,
     Num1 = 89,
     Num2 = 90,
@@ -136,7 +140,7 @@ impl KeyboardLayoutExt for KeyboardLayout {
 
 pub type KeyboardLayout = [PositionedKey];
 
-pub const KEYBOARD_LAYOUT: [PositionedKey; 101] = [
+pub const KEYBOARD_LAYOUT: &[PositionedKey; 101] = &[
     // Column 0
     PositionedKey {
         key: KeyCode::Esc,
@@ -605,7 +609,8 @@ pub const KEYBOARD_LAYOUT: [PositionedKey; 101] = [
         h: 38,
     },
     PositionedKey {
-        key: KeyCode::Fn,
+        // TODO: find a way to use the ComplexAction Fn (or another way)
+        key: KeyCode::None,
         matrix_index: 65,
         x: 424,
         y: -229,
@@ -761,7 +766,7 @@ pub const KEYBOARD_LAYOUT: [PositionedKey; 101] = [
         h: 38,
     },
     PositionedKey {
-        key: KeyCode::PageUp,
+        key: KeyCode::PgUp,
         matrix_index: 85,
         x: 641,
         y: -69,
@@ -769,7 +774,7 @@ pub const KEYBOARD_LAYOUT: [PositionedKey; 101] = [
         h: 38,
     },
     PositionedKey {
-        key: KeyCode::PageDown,
+        key: KeyCode::PgDown,
         matrix_index: 86,
         x: 641,
         y: -109,
@@ -802,7 +807,7 @@ pub const KEYBOARD_LAYOUT: [PositionedKey; 101] = [
         h: 38,
     },
     PositionedKey {
-        key: KeyCode::NumLock,
+        key: KeyCode::NumLk,
         matrix_index: 91,
         x: 691,
         y: -69,
@@ -843,7 +848,7 @@ pub const KEYBOARD_LAYOUT: [PositionedKey; 101] = [
     },
     // Column 16 (Numpad Midden)
     PositionedKey {
-        key: KeyCode::ScrollLock,
+        key: KeyCode::ScrLk,
         matrix_index: 96,
         x: 732,
         y: -20,
@@ -851,7 +856,7 @@ pub const KEYBOARD_LAYOUT: [PositionedKey; 101] = [
         h: 38,
     },
     PositionedKey {
-        key: KeyCode::NumSlash,
+        key: KeyCode::NumDiv,
         matrix_index: 97,
         x: 732,
         y: -69,
@@ -884,7 +889,7 @@ pub const KEYBOARD_LAYOUT: [PositionedKey; 101] = [
     },
     // Column 17 (Numpad Rechts)
     PositionedKey {
-        key: KeyCode::PrintScreen,
+        key: KeyCode::Print,
         matrix_index: 102,
         x: 773,
         y: -20,
@@ -892,7 +897,7 @@ pub const KEYBOARD_LAYOUT: [PositionedKey; 101] = [
         h: 38,
     },
     PositionedKey {
-        key: KeyCode::NumStar,
+        key: KeyCode::NumMul,
         matrix_index: 103,
         x: 773,
         y: -69,
@@ -933,7 +938,7 @@ pub const KEYBOARD_LAYOUT: [PositionedKey; 101] = [
     },
     // Column 18 (Numpad Rand)
     PositionedKey {
-        key: KeyCode::Delete,
+        key: KeyCode::Del,
         matrix_index: 108,
         x: 814,
         y: -20,
@@ -941,7 +946,7 @@ pub const KEYBOARD_LAYOUT: [PositionedKey; 101] = [
         h: 38,
     },
     PositionedKey {
-        key: KeyCode::NumMinus,
+        key: KeyCode::NumMin,
         matrix_index: 109,
         x: 814,
         y: -69,
@@ -949,7 +954,7 @@ pub const KEYBOARD_LAYOUT: [PositionedKey; 101] = [
         h: 38,
     },
     PositionedKey {
-        key: KeyCode::NumPlus,
+        key: KeyCode::NumAdd,
         matrix_index: 110,
         x: 814,
         y: -109,
@@ -966,7 +971,7 @@ pub const KEYBOARD_LAYOUT: [PositionedKey; 101] = [
     },
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(EnumIter, Debug, Clone, Copy, PartialEq)]
 pub enum ComplexAction {
     // Part 1: Mouse & Movement
     MouseLeft,
@@ -1142,12 +1147,11 @@ impl ComplexAction {
     }
 }
 
-pub trait KeyAction {
+pub trait KeyAction: Debug + DynEq {
     fn to_bytes(&self) -> [u8; 4];
     fn legend(&self) -> String;
 }
 
-// 1. Implementation for standard KeyCode
 impl KeyAction for KeyCode {
     fn to_bytes(&self) -> [u8; 4] {
         [0, 0, 0, *self as u8]
@@ -1166,16 +1170,28 @@ impl KeyAction for KeyCode {
             KeyCode::Comma => ",".to_string(),
             KeyCode::Period => ".".to_string(),
             KeyCode::Slash => "/".to_string(),
-            KeyCode::Key0 => "0".to_string(),
-            KeyCode::Key1 => "1".to_string(),
-            KeyCode::Key2 => "2".to_string(),
-            KeyCode::Key3 => "3".to_string(),
-            KeyCode::Key4 => "4".to_string(),
-            KeyCode::Key5 => "5".to_string(),
-            KeyCode::Key6 => "6".to_string(),
-            KeyCode::Key7 => "7".to_string(),
-            KeyCode::Key8 => "8".to_string(),
-            KeyCode::Key9 => "9".to_string(),
+            KeyCode::Key0 | KeyCode::Num0 => "0".to_string(),
+            KeyCode::Key1 | KeyCode::Num1 => "1".to_string(),
+            KeyCode::Key2 | KeyCode::Num2 => "2".to_string(),
+            KeyCode::Key3 | KeyCode::Num3 => "3".to_string(),
+            KeyCode::Key4 | KeyCode::Num4 => "4".to_string(),
+            KeyCode::Key5 | KeyCode::Num5 => "5".to_string(),
+            KeyCode::Key6 | KeyCode::Num6 => "6".to_string(),
+            KeyCode::Key7 | KeyCode::Num7 => "7".to_string(),
+            KeyCode::Key8 | KeyCode::Num8 => "8".to_string(),
+            KeyCode::Key9 | KeyCode::Num9 => "9".to_string(),
+            KeyCode::NumEnter => "↵".to_string(),
+            KeyCode::NumAdd => "+".to_string(),
+            KeyCode::NumMin => "-".to_string(),
+            KeyCode::NumDiv => "÷".to_string(),
+            KeyCode::NumMul => "×".to_string(),
+            KeyCode::NumPeriod => ".".to_string(),
+            KeyCode::RightCtrl => "Ctrl".to_string(),
+            KeyCode::RightShift => "Shift".to_string(),
+            KeyCode::Left => "←".to_string(),
+            KeyCode::Right => "→".to_string(),
+            KeyCode::Up => "↑".to_string(),
+            KeyCode::Down => "↓".to_string(),
             _ => format!("{:?}", self),
         }
     }
@@ -1193,7 +1209,7 @@ impl KeyAction for ComplexAction {
 }
 
 // Struct for Key Combinations (e.g., Ctrl + Alt + Delete)
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct KeyCombo<const N: usize>
 where
     // KeyCombo with one key does not exist.
@@ -1259,5 +1275,33 @@ where
             .map(|k| k.legend())
             .collect::<Vec<_>>()
             .join(" + ")
+    }
+}
+
+pub trait DynEq: Any {
+    fn as_any(&self) -> &dyn Any;
+    fn dyn_eq(&self, other: &dyn DynEq) -> bool;
+}
+
+impl<T: PartialEq + Any> DynEq for T {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn dyn_eq(&self, other: &dyn DynEq) -> bool {
+        // First check if the other object is the same concrete type
+        if let Some(other_concrete) = other.as_any().downcast_ref::<Self>() {
+            // If they match, use the concrete PartialEq implementation
+            self == other_concrete
+        } else {
+            // If types differ, they are not equal
+            false
+        }
+    }
+}
+
+impl PartialEq for dyn KeyAction {
+    fn eq(&self, other: &Self) -> bool {
+        self.dyn_eq(other)
     }
 }

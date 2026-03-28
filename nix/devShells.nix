@@ -10,11 +10,6 @@
       ...
     }:
     {
-      devShells.default = pkgs.mkShell {
-        name = "development shell";
-        inputsFrom = [
-          self'.devShells.rust
-        ];
-      };
+      devShells.default = self'.devShells.rust;
     };
 }

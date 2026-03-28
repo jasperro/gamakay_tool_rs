@@ -31,6 +31,9 @@ in
 
           buildInputs = with pkgs; [
             systemd
+            libxkbcommon
+            libGL
+            wayland
           ];
         };
       };
@@ -55,6 +58,7 @@ in
         RUST_SRC_PATH = "${
           pkgs.rust-bin.${rustChannel}.${rustVersion}.rust-src
         }/lib/rustlib/src/rust/library";
+        LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${pkgs.lib.makeLibraryPath commonArgs.buildInputs}";
       };
 
       treefmt = {

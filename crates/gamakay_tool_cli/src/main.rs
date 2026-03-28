@@ -11,6 +11,7 @@ use crate::utils::{KEYBOARD_LAYOUT, KeyAction, KeyCode, KeyboardLayoutExt};
 const VENDOR_ID: u16 = 0x3151;
 const PRODUCT_ID: u16 = 0x4015;
 
+mod gui;
 mod utils;
 
 /// CLI arguments
@@ -23,8 +24,7 @@ mod utils;
 fn main() -> Result<(), Error> {
     // let args = Args::parse();
     let keyboard_device = KeyboardDevice::new().context("HID ERROR")?;
-    keyboard_device.send_key_remap()?;
-    anyhow::Ok(())
+    gui::run_gui(keyboard_device).context("GUI Error")
 }
 
 // Thanks Jan Metzger for the great article that helped me get started:
@@ -72,22 +72,16 @@ impl KeyboardDevice {
             .next();
     }
 
-    pub fn send_key_remap(&self) -> Result<(), Error> {
-        let keytomodify: u8 = KEYBOARD_LAYOUT
-            .find_by_key(KeyCode::B)
-            .context("Key does not exist in layout")?
-            .matrix_index;
-        let firstpart: [u8; 7] = [0x13, 0x00, keytomodify, 0x00, 0x00, 0x00, 0x00];
+    pub fn send_key_remap(&self, matrix_index: u8, action_bytes: &[u8; 4]) -> Result<(), Error> {
+        let firstpart: [u8; 7] = [0x13, 0x00, matrix_index, 0x00, 0x00, 0x00, 0x00];
         let checksum = calculate_checksum(&firstpart[..]);
         let padding: [u8; 52] = [0x00; 52];
         // let values = [0u8, KeyCode::G as u8, KeyCode::Fn as u8, 0u8];
-        let values = KeyCode::B;
-        let values = values.to_bytes();
         let data = [
             &[0x00 as u8][..],
             &firstpart[..],
             &[checksum][..],
-            &values[..],
+            &action_bytes[..],
             &padding[..],
         ]
         .concat();
