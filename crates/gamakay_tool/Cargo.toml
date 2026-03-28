@@ -1,7 +1,7 @@
 [package]
 authors = ["Jasper Albering <jasper.albering@gmail.com>"]
 edition = "2024"
-name = "gamakay_tool_cli"
+name = "gamakay_tool"
 description = "A simple Rust project using Nix"
 version = "0.1.0"
 

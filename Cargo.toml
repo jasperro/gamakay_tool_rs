@@ -3,7 +3,7 @@ members = ["crates/*"]
 resolver = "3"
 
 [workspace.dependencies]
-gamakay_tool_cli = { path = "./crates/gamakay_tool_cli" }
+gamakay_tool = { path = "./crates/gamakay_tool" }
 
 [profile.dev]
 opt-level = 1
