@@ -6,8 +6,6 @@ use anyhow::{Context, Error, Result};
 extern crate hidapi;
 use hidapi::{DeviceInfo, HidApi, HidDevice, HidError};
 
-use crate::utils::{KEYBOARD_LAYOUT, KeyAction, KeyCode, KeyboardLayoutExt};
-
 const VENDOR_ID: u16 = 0x3151;
 const PRODUCT_ID: u16 = 0x4015;
 

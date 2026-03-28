@@ -3,7 +3,10 @@
 
 use crate::{
     KeyboardDevice,
-    utils::{ComplexAction, KEYBOARD_LAYOUT, KeyAction, KeyCode, PositionedKey},
+    utils::{
+        actions::{ComplexAction, KeyAction, KeyCode},
+        layout::{KEYBOARD_LAYOUT, PositionedKey},
+    },
 };
 use eframe::egui;
 use strum::IntoEnumIterator;
